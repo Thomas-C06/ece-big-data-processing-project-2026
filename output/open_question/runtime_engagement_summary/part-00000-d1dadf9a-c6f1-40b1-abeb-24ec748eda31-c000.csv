@@ -1,0 +1,5 @@
+runtime_band,represented_genres,genres_where_band_is_first,average_of_genre_mean_ratings,average_genre_median_votes
+105-134,25,10,6.3,420.0
+135+,26,13,6.69,473.0
+40-74,26,1,6.47,31.0
+75-104,26,2,6.04,155.0
