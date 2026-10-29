@@ -1,0 +1,9 @@
+FROM python:3.12-slim
+
+WORKDIR /opt/project
+COPY requirements-tools.txt /tmp/requirements-tools.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-tools.txt
+
+ENV PYTHONPATH=/opt/project/src:/opt/project
+CMD ["python", "--version"]
+

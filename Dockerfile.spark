@@ -1,0 +1,7 @@
+FROM apache/spark:3.5.7-python3
+
+WORKDIR /opt/project
+ENV PYTHONPATH=/opt/project/src:/opt/project
+ENTRYPOINT []
+CMD ["/opt/spark/bin/spark-submit", "--version"]
+
