@@ -119,7 +119,8 @@ def resolve_batch(session: requests.Session, rows: list[tuple], kind: str) -> di
 def fetch_pending(database: sqlite3.Connection, delay: float) -> None:
     session = requests.Session()
     session.headers["User-Agent"] = USER_AGENT
-    for kind, batch_size in (("film", 16), ("person", 50)):
+    # TextExtracts returns at most 20 intro extracts per request; films try 3 titles each.
+    for kind, batch_size in (("film", 6), ("person", 20)):
         while True:
             rows = database.execute(
                 "SELECT kind, entity_id, label, year FROM pages "
