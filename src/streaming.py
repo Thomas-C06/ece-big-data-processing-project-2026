@@ -88,7 +88,7 @@ def main() -> None:
         .withColumn("event_time", F.to_timestamp(F.from_unixtime("timestamp")))
         .withColumn("normalized_title", normalized(F.col("title")))
         .withWatermark("event_time", "10 minutes")
-        .dropDuplicates(["id"])
+        .dropDuplicatesWithinWatermark(["id"])
     )
     matches = (
         events.join(F.broadcast(index), "normalized_title")
