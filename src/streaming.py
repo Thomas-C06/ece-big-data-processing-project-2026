@@ -24,8 +24,7 @@ EVENT_SCHEMA = StructType([
 
 
 def normalized(column):
-    without_suffix = F.regexp_replace(column, r"\s+\([^)]*\)$", "")
-    return F.lower(F.trim(F.regexp_replace(without_suffix, r"[^\p{L}\p{N}]+", " ")))
+    return F.lower(F.trim(F.regexp_replace(column, r"[^\p{L}\p{N}]+", " ")))
 
 
 def main() -> None:
@@ -88,7 +87,7 @@ def main() -> None:
         .withColumn("event_time", F.to_timestamp(F.from_unixtime("timestamp")))
         .withColumn("normalized_title", normalized(F.col("title")))
         .withWatermark("event_time", "10 minutes")
-        .dropDuplicates(["id"])
+        .dropDuplicatesWithinWatermark(["id"])
     )
     matches = (
         events.join(F.broadcast(index), "normalized_title")
