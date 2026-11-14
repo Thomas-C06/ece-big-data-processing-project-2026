@@ -88,13 +88,13 @@ The fetching step is separated from Spark because network requests are not trans
 
 The final nested records are in `output/enrichment/films`. Each synopsis has `synopsis_source_url`, and each principal has `biography_source_url`. Missing pages have a note. Coverage metrics are in `output/enrichment/coverage`.
 
-The pipeline selected 10,197 genre-year film records. English Wikipedia supplied 4,634 film introductions, or 45.44%, and 11,262 biographies among 30,332 requested principal positions, or 37.13%. The remaining records contain the required programmatic absence note and no generated replacement text.
+The pipeline selected 10,198 genre-year film records. English Wikipedia supplied 4,636 film introductions, or 45.46%, and 16,423 biographies among 30,333 requested principal positions, or 54.14%. The remaining records contain the required programmatic absence note and no generated replacement text.
 
 ## Streaming data processing
 
 ### Methodological explanation
 
-The producer reads Wikimedia recent changes for the English, French and German Wikipedias and keeps main-namespace events. Spark normalises page titles and matches them with an index of IMDb films from 1980–2025 having at least 1,000 votes and their principals. This is broad enough to capture several relevant edits during a 15–30 minute window while still having a direct IMDb relation. Matching only exact unnormalised titles was considered, but Wikipedia suffixes such as “(film)” would cause avoidable misses. Matching every word was rejected because common words would create too many false positives.
+The producer reads Wikimedia recent changes for the English, French and German Wikipedias and keeps main-namespace events. Spark lowercases titles and normalises their punctuation while preserving parenthetical qualifiers, then it matches them with an index of IMDb films from 1980–2025 having at least 1,000 votes and their principals. This is broad enough to capture several relevant edits during a 15–30 minute window while still having a direct IMDb relation. Removing every parenthetical suffix was considered, but it matched pages about footballers, songs or different film versions with unrelated IMDb entities having the same base name. Matching every word was rejected because common words would create too many false positives.
 
 Event time comes from Wikimedia, not Kafka arrival time. A ten-minute watermark accepts events arriving moderately late. Event IDs are deduplicated inside this state window. Events later than the watermark can be dropped, which bounds the state and prevents unlimited memory growth. A longer watermark would retain more very late events but would also retain more state for a live stream.
 
@@ -102,7 +102,7 @@ Event time comes from Wikimedia, not Kafka arrival time. A ten-minute watermark 
 
 Individual matching events are in `output/streaming/matches`, including the Wikipedia URL and IMDb entity. Per-batch metrics are in `output/streaming/metrics`.
 
-The 20-minute Spark test produced 94 matching events in 20 non-empty micro-batches. They represent 80 distinct Wikipedia pages and 81 distinct IMDb entities. There are 39 film matches and 55 person matches. By wiki, 72 matches come from English, 14 from French and 8 from German Wikipedia. Matching event times extend from 28 October 2026 at 23:26:53 UTC to 23:41:12 UTC, so multiple matches were continuously captured inside the required test window.
+The 15-minute Spark test produced 50 matching rows in 21 non-empty micro-batches. They represent 48 distinct events, 37 distinct Wikipedia pages and 38 distinct IMDb entities. There are 10 film matches and 40 person matches. By wiki, 28 matches come from English, 20 from French and 2 from German Wikipedia. Matching event times extend from 14 November 2026 at 10:03:47 UTC to 10:18:44 UTC, so multiple matches were continuously captured inside the required test window.
 
 ## Open question
 

@@ -3,6 +3,7 @@
 ## Contributors
 
 - Thomas-C06 — tc.perso14@gmail.com
+- Alfred de Vulpian — derfladv@gmail.com
 
 ## Environment
 
@@ -77,7 +78,7 @@ docker compose run --rm tools python src/wiki_producer.py --minutes 20
 At the same time, in a second terminal, start Spark Structured Streaming:
 
 ```powershell
-docker compose run --rm spark /opt/spark/bin/spark-submit --master "local[4]" --driver-memory 3g --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.7 src/streaming.py --minutes 20
+docker compose run --rm spark /opt/spark/bin/spark-submit --master "local[2]" --driver-memory 3g --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.7 src/streaming.py --minutes 20
 ```
 
 Matches and batch metrics are written to `output/streaming`. Stop Kafka after the test:
