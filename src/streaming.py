@@ -24,8 +24,7 @@ EVENT_SCHEMA = StructType([
 
 
 def normalized(column):
-    without_suffix = F.regexp_replace(column, r"\s+\([^)]*\)$", "")
-    return F.lower(F.trim(F.regexp_replace(without_suffix, r"[^\p{L}\p{N}]+", " ")))
+    return F.lower(F.trim(F.regexp_replace(column, r"[^\p{L}\p{N}]+", " ")))
 
 
 def main() -> None:
