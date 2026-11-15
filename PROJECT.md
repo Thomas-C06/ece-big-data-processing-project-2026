@@ -93,4 +93,4 @@ Each task must be developed on its own `feature/...` branch. A pull request must
 
 ## AI and LLM declaration
 
-Codex and claude code were used only during development. They were used to write the PySpark and Python code and help validate execution errors.
+Codex and Claude Code were used only during development. They were used to write the PySpark and Python code and help validate execution errors.

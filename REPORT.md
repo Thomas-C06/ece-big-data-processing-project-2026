@@ -1,14 +1,14 @@
 # IMDb Big Data Processing Report
 
-The dataset was downloaded on 28 October 2026 from the official IMDb dataset endpoint. Complete machine-readable results are stored in `output`, the tables below shows the main results withou replacing these files.
+The dataset was downloaded on 28 October 2026 from the official IMDb dataset endpoint. Complete machine-readable results are stored in `output`, the tables below show the main results without replacing these files.
 
 ## Data preparation
 
 ### Methodological explanation
 
-First we read all the columns as strings because otherwise Spark can convert `\\N` before we counted it. For each column, we counted null values, `\\N` markers and empty strings, then divide by the number of rows of the table. We chose this direct aggregation because it gives an exact result. We also considered approximating the sample but it could lead to some rare problems.
+First we read all the columns as strings because otherwise Spark can convert `\\N` before we counted it. For each column, we counted null values, `\\N` markers and empty strings, then divided by the number of rows of the table. We chose this direct aggregation because it gives an exact result. We also considered approximating the sample but it could lead to some rare problems.
 
-Following profiling, explicit types were applied. Dates of life that don’t match reality, negative runtime and negative end year before start year are not allowed. In the cleaned table, the incorrect values were set to null, as deleting a person or movie entirely from the database would be a loss of data. Deleting the child row was considered, but would lead to loss of data, So child rows missing a title or person parent were counted and included in the quarantine table, they were kept in place, as an inner join would not be able to connect them to a parent that isn’t true.
+Following profiling, explicit types were applied. Dates of life that don’t match reality, negative runtimes and negative end years before start years are not allowed. In the cleaned table, the incorrect values were set to null, as deleting a person or movie entirely from the database would be a loss of data. Deleting the child row was considered, but would lead to loss of data, So child rows missing a title or person parent were counted and included in the quarantine table, they were kept in place, as an inner join would not be able to connect them to a parent that isn’t true.
 
 ### Results
 
@@ -40,7 +40,7 @@ The quality counts can be found in `output/preparation/data_quality_issues`. Up 
 
 A feature-length movie is defined to be a `movie` that lasts at least 40 minutes. A difference in duration is considered to be big enough if it's at least two standard deviations away from the mean of the genre. Genres with less than 30 movies with ratings are not used. A median or MAD (median absolute deviation) measurement could have been used, but it is compared to the average.
 
-We needed to measure a genre popularity based on the number of votes received by the films, while accounting for production volume and average ratings. But, the final approach focused on the total number of IMDb votes received by all feature films in each genre and year. Average ratings weren't used as a direct measure of popularity, because niche films can receiving relatively few votes and still achieve high ratings. The comparison represents the proportion of total votes of the three most popular genres against all remaining genres.
+We needed to measure a genre popularity based on the number of votes received by the films, while accounting for production volume and average ratings. But, the final approach focused on the total number of IMDb votes received by all feature films in each genre and year. Average ratings weren't used as a direct measure of popularity, because niche films can receive relatively few votes and still achieve high ratings. The comparison represents the proportion of total votes of the three most popular genres against all remaining genres.
 
 A movie is considered successful in a language if it has a rating of at least 7.0 and 1,000 votes or more. IMDb does not provide the original language of each movie, so the title.akas.language field is used instead. This field lists the languages of alternative titles on IMDb, which means it may include languages that were not actually used in the film. As a result, the number of languages can be higher than the real number of production languages.
 
@@ -88,25 +88,25 @@ The analysis also identifies 1 159 584 professionals with at least two creative 
 
 For every genre and year, feature films are ranked by rating, then by vote count to resolve ties, and the top ten are selected. The first three IMDb principals are kept according to their official ordering. Wikipedia is the only enrichment source. Film pages and person pages are requested in batches. Only the human-written introductory extracts are used, and the exact page URL is stored with each text. If no page is found, a programmatic note is added instead of generating content.
 
-The first approach was to request each record separately without a cache, but this would lead to duplicate calls and put more load on the API. So the fetching step is keep separate from Spark, because network requests are not transformations. It uses an identifying user agent, a delay between requests, batches and a persistent SQLite cache. Spark handles candidate selection, schema enforcement, cleaning and final storage. Scraping HTML was also an idea, but the MediaWiki API is more stable and gives a better source information.
+The first approach was to request each record separately without a cache, but this would lead to duplicate calls and put more load on the API. So the fetching step is kept separate from Spark, because network requests are not transformations. It uses an identifying user agent, a delay between requests, batches and a persistent SQLite cache. Spark handles candidate selection, schema enforcement, cleaning and final storage. Scraping HTML was also an idea, but the MediaWiki API is more stable and gives a better source information.
 
 ### Results
 
 The final nested records are stored in output/enrichment/films. Each synopsis includes a synopsis_source_url, and each principal has a biography_source_url. When a page is missing, a note is added instead. Coverage metrics are stored in output/enrichment/coverage.
 
-The pipeline selected 10 198 genre-year film records. English Wikipedia provided 4 636 film introductions, or 45,46%, and 16 423 biographies in 30 333 requested principal positions, or 54,14%. The other records contains the required programmatic absence note, with no generated replacement text.
+The pipeline selected 10 198 genre-year film records. English Wikipedia provided 4 636 film introductions, or 45,46%, and 16 423 biographies in 30 333 requested principal positions, or 54,14%. The other records contain the required programmatic absence note, with no generated replacement text.
 
 ## Streaming data processing
 
 ### Methodological explanation
 
-The producer read recent changes from the English, French and German Wikipedia and keeps only events from the main namespace. Spark converts titles to lowercase, normalises the punctuation and keep parenthetical qualifiers. Then it matches them with an IMDb film index covering 1980 - 2025, with at least 1 000 votes, and their principals. This approach capture several relevant edits within a 15 - 30 minute window while keeping a direct link to IMDb films. We also thought about removing all parenthetical suffixes, but this also matched pages about footballers, songs or different film versions with unrelated IMDb entities sharing the same base name.
+The producer reads recent changes from the English, French and German Wikipedia and keeps only events from the main namespace. Spark converts titles to lowercase, normalises the punctuation and keeps parenthetical qualifiers. Then it matches them with an IMDb film index covering 1980 - 2025, with at least 1 000 votes, and their principals. This approach captures several relevant edits within a 15 - 30 minute window while keeping a direct link to IMDb films. We also thought about removing all parenthetical suffixes, but this also matched pages about footballers, songs or different film versions with unrelated IMDb entities sharing the same base name.
 
 Event time comes from Wikimedia rather than Kafka arrival time. We first used a longer watermark, but it required too much state to be stored during the live stream and increased memory usage. So we reduced it to ten minutes, which still allows events to arrive a bit late while keeping memory usage under control. Event IDs are deduplicated within this time window. Events arriving after the watermark may be dropped, but this helps limit the amount of stored state and prevents memory usage from growing indefinitely.
 
 ### Results
 
-Individual matching events are in `output/streaming/matches`, with the Wikipedia URL and IMDb entity. Metrics per batches are in `output/streaming/metrics`.
+Individual matching events are in `output/streaming/matches`, with the Wikipedia URL and IMDb entity. Metrics per batch are in `output/streaming/metrics`.
 
 The 15-minute Spark test returned 50 matching rows across 21 batches containing data. These represent 48 different events, 37 Wikipedia pages and 38 IMDb entities. There are 10 film matches and 40 person matches. By language, 28 matches come from English Wikipedia, 20 from French and 2 from German. The matching event times range from 14 November 2026 at 10:03:47 UTC to 10:18:44 UTC. This shows that matches were found regularly during the whole test period.
 
@@ -122,7 +122,7 @@ Title basics are joined with ratings, and genres are separated. Films are then g
 
 ### Results and takeaways
 
-The detailed table is in `output/open_question/runtime_engagement_by_genre` and the summary in `output/open_question/runtime_engagement_summary`.
+The detailed table is in `output/open_question/runtime_engagement_by_genre` and the summary is in `output/open_question/runtime_engagement_summary`.
 
 | Runtime band | Represented genres | Genres where ranked first | Average genre mean rating | Average genre median votes |
 | --- | ---: | ---: | ---: | ---: |
@@ -131,4 +131,4 @@ The detailed table is in `output/open_question/runtime_engagement_by_genre` and 
 | 105–134 | 25 | 10 | 6.30 | 420 |
 | 135+ | 26 | 13 | 6.69 | 473 |
 
-The 135+ minute band ranks first in 13 of the 26 genres. It also have the highest average of genre median votes. The 105 – 134 minute band comes first in 10 other genre. These results mean that longer films tend to receive more votes, even when genres are compared separately. However, it doesn't prove that longer runtimes lead to higher engagement.
+The 135+ minute band ranks first in 13 of the 26 genres. It also has the highest average of genre median votes. The 105 – 134 minute band comes first in 10 other genres. These results mean that longer films tend to receive more votes, even when genres are compared separately. However, it doesn't prove that longer runtimes lead to higher engagement.
