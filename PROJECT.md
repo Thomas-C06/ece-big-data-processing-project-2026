@@ -7,7 +7,7 @@
 
 ## Environment
 
-The project uses Apache Spark 3.5.7, Apache Kafka 4.1.1 and Python 3.12. The only prerequisite is Docker Desktop with Docker Compose. A minimum of 4 GB of memory and 20 GB of free disk space is recommended. All commands below must be executed from the `Projet` directory.
+The project uses Apache Spark 3.5.7, Apache Kafka 4.1.1 and Python 3.12. The only prerequisite is Docker Desktop with Docker Compose. A minimum of 4 GB of memory and 20 GB of free disk space is recommended. All commands below must be executed from the root folder.
 
 ## Execution guide
 
