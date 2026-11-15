@@ -79,7 +79,11 @@ def resolve_batch(session: requests.Session, rows: list[tuple], kind: str) -> di
         timeout=60,
     )
     response.raise_for_status()
-    payload = response.json().get("query", {})
+    data = response.json() # add error handling for JSON decoding
+    if "error" in data:
+        raise requests.RequestException(data["error"].get("info", "MediaWiki API error"))
+    payload = data.get("query", {})
+
     aliases = {}
     for item in payload.get("normalized", []):
         aliases[item["from"].casefold()] = item["to"]
@@ -203,4 +207,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
