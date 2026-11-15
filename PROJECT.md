@@ -93,5 +93,4 @@ Each task must be developed on its own `feature/...` branch. A pull request must
 
 ## AI and LLM declaration
 
-OpenAI Codex was used during development. It was used to interpret the instructions, propose the Docker structure, write the PySpark and Python code, write the two Markdown documents and help validate execution errors. The contributor remains responsible for reviewing the code, the methodological choices and the final results.
-
+Codex and claude code were used only during development. They were used to write the PySpark and Python code and help validate execution errors.
