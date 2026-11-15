@@ -41,7 +41,12 @@ def main() -> None:
                         break
                     if not raw_line or not raw_line.startswith("data:"):
                         continue
-                    event = json.loads(raw_line[5:].strip())
+
+                    try:
+                        event = json.loads(raw_line[5:].strip())
+                    except json.JSONDecodeError:
+                        continue
+
                     if event.get("namespace") == 0 and event.get("wiki") in {
                         "enwiki",
                         "frwiki",
@@ -64,4 +69,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
