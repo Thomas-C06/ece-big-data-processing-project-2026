@@ -3,4 +3,4 @@ output/streaming/checkpoints/
 __pycache__/
 *.pyc
 *.crc
-
+.pytest_cache/
