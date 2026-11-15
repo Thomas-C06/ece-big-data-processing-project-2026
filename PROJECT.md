@@ -87,6 +87,15 @@ Matches and batch metrics are written to `output/streaming`. Stop Kafka after th
 docker compose down
 ```
 
+### 8. Run the unit tests
+
+```powershell
+docker compose build tools
+docker compose run --rm --no-deps tools python -m pytest tests -v
+```
+
+The tests use a fake session, so they do not call the Wikipedia API.
+
 ## Git workflow
 
 Each task must be developed on its own `feature/...` branch. A pull request must be opened, reviewed and approved by another group member before it is merged. No direct commit must be made on `main`. The contribution must stay approximately equal between group members.
